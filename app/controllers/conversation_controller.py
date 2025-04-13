@@ -38,7 +38,7 @@ class ConversationController:
                 limit=result['limit'],
                 data=[
                     ConversationResponse(
-                        id=conv['id'],
+                        id=str(conv['id']),
                         user1_id=conv['user1_id'],
                         user2_id=conv['user2_id'],
                         last_message_at=conv['last_message_at'],
@@ -76,7 +76,7 @@ class ConversationController:
                 )
 
             return ConversationResponse(
-                id=conversation['id'],
+                id=str(conversation['id']),
                 user1_id=conversation['user1_id'],
                 user2_id=conversation['user2_id'],
                 last_message_at=conversation['last_message_at'],

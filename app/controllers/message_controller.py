@@ -25,7 +25,6 @@ class MessageController:
             HTTPException: If message sending fails
         """
         try:
-            # Import model inside method to avoid circular imports
             from app.models.cassandra_models import MessageModel
 
             result = await MessageModel.create_message(

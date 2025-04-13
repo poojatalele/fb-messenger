@@ -332,28 +332,29 @@ class ConversationModel:
         Returns:
             Conversation data
         """
-        # Sort the user IDs to ensure consistent lookups
         sorted_user_ids = sorted([user1_id, user2_id])
         user1_id, user2_id = sorted_user_ids[0], sorted_user_ids[1]
 
-        # Check if conversation exists
         result = cassandra_client.execute(
             "SELECT * FROM user_conversations_lookup WHERE user1_id = %(user1_id)s AND user2_id = %(user2_id)s",
             {'user1_id': user1_id, 'user2_id': user2_id}
         )
 
         if result:
-            # Conversation exists, get its details
             conversation_id = result[0]['conversation_id']
-            conversation = await ConversationModel.get_conversation(conversation_id)
-            return conversation
+            conversation_data = await ConversationModel.get_conversation(conversation_id)
+            
+            return {
+                'conversation_id': conversation_data['id'],
+                'user1_id': conversation_data['user1_id'],
+                'user2_id': conversation_data['user2_id'],
+                'last_message_at': conversation_data['last_message_at'],
+                'last_message_content': conversation_data['last_message_content']
+            }
 
-        # Conversation doesn't exist, create a new one
-        # Generate a conversation ID (using a timestamp-based approach for simplicity)
         conversation_id = int(datetime.now().timestamp() * 1000)
         created_at = datetime.now()
 
-        # Insert into conversation_metadata - FIXED VERSION WITH NAMED PARAMETERS
         cassandra_client.execute(
             """
             INSERT INTO conversation_metadata (
@@ -370,7 +371,6 @@ class ConversationModel:
             }
         )
 
-        # Insert into user_conversations_lookup - FIXED VERSION WITH NAMED PARAMETERS
         cassandra_client.execute(
             """
             INSERT INTO user_conversations_lookup (

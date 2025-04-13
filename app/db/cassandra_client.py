@@ -33,28 +33,22 @@ class CassandraClient:
         self.cluster = None
         self.session = None
         
-        # Don't connect immediately on initialization
-        # We'll connect when needed
-        
         self._initialized = True
    
     def connect(self) -> None:
         """Connect to the Cassandra cluster with retry logic."""
         max_retries = 10
-        retry_delay = 5  # seconds
+        retry_delay = 5
         
         for attempt in range(max_retries):
             try:
                 logger.info(f"Connecting to Cassandra at {self.host}:{self.port} (attempt {attempt+1}/{max_retries})...")
                 self.cluster = Cluster([self.host])
                 
-                # First connect without keyspace to verify the connection
                 temp_session = self.cluster.connect()
                 
-                # Check if keyspace exists, create if it doesn't
                 self._ensure_keyspace_exists(temp_session)
                 
-                # Now connect with the keyspace
                 self.session = self.cluster.connect(self.keyspace)
                 self.session.row_factory = dict_factory
                 
@@ -65,8 +59,7 @@ class CassandraClient:
                     logger.warning(f"Failed to connect to Cassandra (attempt {attempt+1}): {str(e)}")
                     logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
-                    # Increase retry delay for next attempt
-                    retry_delay = min(retry_delay * 1.5, 30)  # Cap at 30 seconds
+                    retry_delay = min(retry_delay * 1.5, 30)
                 else:
                     logger.error(f"Failed to connect to Cassandra after {max_retries} attempts: {str(e)}")
                     raise
@@ -74,7 +67,6 @@ class CassandraClient:
     def _ensure_keyspace_exists(self, session):
         """Ensure the keyspace exists, create it if it doesn't."""
         try:
-            # Check if keyspace exists
             rows = session.execute(f"SELECT keyspace_name FROM system_schema.keyspaces WHERE keyspace_name = '{self.keyspace}'")
             if not rows:
                 logger.info(f"Creating keyspace {self.keyspace}...")
@@ -142,5 +134,4 @@ class CassandraClient:
             self.connect()
         return self.session
 
-# Create a global instance
 cassandra_client = CassandraClient()

@@ -32,4 +32,4 @@ async def get_conversation(
     """
     Get a specific conversation by ID
     """
-    return await conversation_controller.get_conversation(conversation_id=conversation_id) 
+    return await conversation_controller.get_conversation(conversation_id=conversation_id)
